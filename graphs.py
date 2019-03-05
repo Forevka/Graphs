@@ -1,4 +1,6 @@
 import numpy as np
+import networkx as nx
+import matplotlib.pyplot as plt
 
 class Link:
     def __init__(self, from_id, to_id):
@@ -34,9 +36,10 @@ class Node:
 
 
 class Graph:
-    def __init__(self, file = 'first.txt'):
+    def __init__(self, file = 'first.txt', matrix = None):
         self.file = file
-        self.nodes_list, self.links_list = self.load_graph()
+        if matrix is None:
+            self.nodes_list, self.links_list = self.load_graph()
 
     def create_node(self, temp_storage, node_id, link_to) -> Node:
         node = temp_storage['nodes'].get(node_id)
@@ -66,7 +69,7 @@ class Graph:
         return self.links_list
 
     def get_nodes(self) -> list:
-        return self.nodes_list
+        return self.nodes_list.values()
 
     def matrix_incident(self):
         matrix = np.zeros(shape = (len(self.nodes_list), len(self.links_list)))
@@ -90,7 +93,7 @@ class Graph:
         l = {}
         for node in self.nodes_list.values():
             for link in node.get_linked_to():
-                print(link)
+                #print(link)
                 l.update({link.from_id: l.get(link.from_id, 0)+1})
                 l.update({link.to_id: l.get(link.to_id, 0)+1})
 
@@ -98,6 +101,26 @@ class Graph:
 
     def get_isolated(self):
         pass
+
+    def show(self, save_path = None):
+        G=nx.DiGraph()
+        nodes = self.get_nodes()
+        links = self.get_links()
+        labels = {}
+        for n, node in enumerate(nodes):
+            print(node)
+            G.add_node(node.id)
+            labels[n+1] = str(node.id)
+            for link in links:
+                G.add_edge(link.from_id, link.to_id)
+
+        pos=nx.circular_layout(G)
+        nx.draw_networkx_nodes(G, pos,node_size=120, node_color='r')
+        nx.draw_networkx_labels(G, pos, labels ,font_size=11)
+        nx.draw_networkx_edges(G, pos, edge_color='b', alpha = 0.5, arrows=True)
+        if save_path is not None:
+            plt.savefig(save_path)
+        plt.show()
 
 g = Graph()
 m = g.matrix_incident()
@@ -113,5 +136,6 @@ mm = g.matrix_adjacency()
 for n, i in enumerate(mm):
     print(n+1, ":", i)
 
+g.show()
 #print(g.get_nodes_power())
 #print(g.get_isolated())
