@@ -1,25 +1,5 @@
 import numpy as np
 
-class Node:
-    def __init__(self, id):
-        self.id = int(id)
-        self.links_list = []
-
-    def get_linked_to(self):# pass
-        for i in self.links_list:
-            yield i
-
-    def add_link(self, to_id):
-        new_link = Link(self.id, int(to_id))
-        self.links_list.append(new_link)
-        return new_link
-
-    def __repr__(self):
-        return str(self)
-
-    def __str__(self):
-        return "Graph {} ID Links count: {}".format(self.id, len(self.links_list))
-
 class Link:
     def __init__(self, from_id, to_id):
         self.from_id = from_id
@@ -31,12 +11,34 @@ class Link:
     def __str__(self):
         return "Link from {} to {}".format(self.from_id, self.to_id)
 
+class Node:
+    def __init__(self, id):
+        self.id = int(id)
+        self.links_list = []
+
+    def get_linked_to(self) -> Link:# pass
+        for i in self.links_list:
+            yield i
+
+    def add_link(self, to_id) -> Link:
+        new_link = Link(self.id, int(to_id))
+        self.links_list.append(new_link)
+        return new_link
+
+    def __repr__(self):
+        return str(self)
+
+    def __str__(self):
+        return "Graph {} ID Links count: {}".format(self.id, len(self.links_list))
+
+
+
 class Graph:
     def __init__(self, file = 'first.txt'):
         self.file = file
         self.nodes_list, self.links_list = self.load_graph()
 
-    def create_node(self, temp_storage, node_id, link_to):
+    def create_node(self, temp_storage, node_id, link_to) -> Node:
         node = temp_storage['nodes'].get(node_id)
         to_node = temp_storage['nodes'].get(link_to)
         if to_node is None:
@@ -51,7 +53,7 @@ class Graph:
         temp_storage['nodes'].update({node_id: node})
         return node
 
-    def load_graph(self):
+    def load_graph(self) -> dict:
         t = {'nodes':{}, 'links':[]}
         for line in open(self.file, 'r', encoding = 'utf8').readlines():
             line = line.replace('\n', '')
@@ -60,10 +62,10 @@ class Graph:
 
         return t['nodes'], t['links']
 
-    def get_links(self):
+    def get_links(self) -> dict:
         return self.links_list
 
-    def get_nodes(self):
+    def get_nodes(self) -> list:
         return self.nodes_list
 
     def matrix_incident(self):
@@ -84,7 +86,7 @@ class Graph:
 
         return matrix
 
-    def get_nodes_power(self):
+    def get_nodes_power(self) -> dict:
         l = {}
         for node in self.nodes_list.values():
             for link in node.get_linked_to():
@@ -112,4 +114,4 @@ for n, i in enumerate(mm):
     print(n+1, ":", i)
 
 #print(g.get_nodes_power())
-№print(g.get_isolated())
+#print(g.get_isolated())
