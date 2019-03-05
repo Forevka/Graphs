@@ -1,6 +1,7 @@
 import numpy as np
 import networkx as nx
 import matplotlib.pyplot as plt
+from misc import draw_network
 
 class Link:
     def __init__(self, from_id, to_id):
@@ -93,7 +94,6 @@ class Graph:
         l = {}
         for node in self.nodes_list.values():
             for link in node.get_linked_to():
-                #print(link)
                 l.update({link.from_id: l.get(link.from_id, 0)+1})
                 l.update({link.to_id: l.get(link.to_id, 0)+1})
 
@@ -103,21 +103,22 @@ class Graph:
         pass
 
     def show(self, save_path = None):
-        G=nx.DiGraph()
+        G=nx.MultiDiGraph()
         nodes = self.get_nodes()
         links = self.get_links()
         labels = {}
         for n, node in enumerate(nodes):
-            print(node)
             G.add_node(node.id)
             labels[n+1] = str(node.id)
-            for link in links:
-                G.add_edge(link.from_id, link.to_id)
+        for link in links:
+            G.add_edge(link.from_id, link.to_id)
 
         pos=nx.circular_layout(G)
         nx.draw_networkx_nodes(G, pos,node_size=120, node_color='r')
         nx.draw_networkx_labels(G, pos, labels ,font_size=11)
-        nx.draw_networkx_edges(G, pos, edge_color='b', alpha = 0.5, arrows=True)
+        ax=plt.gca()
+        draw_network(G,pos,ax)
+        ax.autoscale()
         if save_path is not None:
             plt.savefig(save_path)
         plt.show()
@@ -136,6 +137,6 @@ mm = g.matrix_adjacency()
 for n, i in enumerate(mm):
     print(n+1, ":", i)
 
-g.show()
+g.show('1.png')
 #print(g.get_nodes_power())
 #print(g.get_isolated())
