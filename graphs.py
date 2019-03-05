@@ -32,15 +32,17 @@ class Node:
         return str(self)
 
     def __str__(self):
-        return "Graph {} ID Links count: {}".format(self.id, len(self.links_list))
+        return "Node {} Links count: {}".format(self.id, len(self.links_list))
 
 
 
 class Graph:
-    def __init__(self, file = 'first.txt', matrix = None):
+    def __init__(self, file = 'first.txt', st = None):
         self.file = file
-        if matrix is None:
-            self.nodes_list, self.links_list = self.load_graph()
+        if st is None:
+            self.nodes_list, self.links_list = self.load_graph_file()
+        else:
+            self.nodes_list, self.links_list = self.load_graph_st(st)
 
     def create_node(self, temp_storage, node_id, link_to) -> Node:
         node = temp_storage['nodes'].get(node_id)
@@ -57,11 +59,19 @@ class Graph:
         temp_storage['nodes'].update({node_id: node})
         return node
 
-    def load_graph(self) -> dict:
+    def load_graph_st(self, st) -> dict:
+        t = {'nodes':{}, 'links':[]}
+        for line in st:
+            id, to_id = line[0], line[1]
+            node = self.create_node(t, id, to_id)
+
+        return t['nodes'], t['links']
+
+    def load_graph_file(self) -> dict:
         t = {'nodes':{}, 'links':[]}
         for line in open(self.file, 'r', encoding = 'utf8').readlines():
-            line = line.replace('\n', '')
-            id, to_id = line.split(' ')[0], line.split(' ')[1]
+            line = line.replace('\n', '').split(' ')
+            id, to_id = line[0], line[1]
             node = self.create_node(t, id, to_id)
 
         return t['nodes'], t['links']
@@ -114,29 +124,41 @@ class Graph:
             G.add_edge(link.from_id, link.to_id)
 
         pos=nx.circular_layout(G)
-        nx.draw_networkx_nodes(G, pos,node_size=120, node_color='r')
         nx.draw_networkx_labels(G, pos, labels ,font_size=11)
         ax=plt.gca()
         draw_network(G,pos,ax)
         ax.autoscale()
         if save_path is not None:
+            print('saving')
             plt.savefig(save_path)
         plt.show()
 
+    def __str__(self):
+        representation = "Graph with:\n"
+        for node in self.get_nodes():
+            representation += " "*4+str(node)+"\n"
+            for link in node.get_linked_to():
+                representation += " "*8+str(link)+"\n"
+
+        return representation
+
+graph = [[1,4],[2,1],[3,2],[3,4],[2,3],[4,1],[5,5]]
+
 g = Graph()
-m = g.matrix_incident()
 
 print('Інциденція:\n')
+m = g.matrix_incident()
 for n, i in enumerate(m):
     print(n+1, ":", i)
 
 
 print('Суміжність:\n')
 mm = g.matrix_adjacency()
-
 for n, i in enumerate(mm):
     print(n+1, ":", i)
 
+print(g)
 g.show('1.png')
+
 #print(g.get_nodes_power())
 #print(g.get_isolated())

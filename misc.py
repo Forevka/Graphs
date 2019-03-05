@@ -4,7 +4,7 @@ import networkx as nx
 def draw_network(G,pos,ax,sg=None):
     for n in G:
         #print(n)
-        c=Circle(pos[n],radius=0.02,alpha=0.5)
+        c=Circle(pos[n],radius=0.05,alpha=0.5)
         ax.add_patch(c)
         G.node[n]['patch']=c
         x,y=pos[n]
