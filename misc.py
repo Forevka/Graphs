@@ -1,9 +1,20 @@
 from matplotlib.patches import FancyArrowPatch, Circle
 import networkx as nx
 
-def draw_network(G,pos,ax,sg=None):
+def get_literal(num):
+    return chr(64+num)
+
+def getKey(custom):
+    return custom.weight
+
+def get_link(links, from_id, to_id):
+    for link in links:
+        if link.from_id == from_id and link.to_id == to_id:
+            return link
+
+def draw_network(G, pos, ax, links, sg=None):
     for n in G:
-        #print(n)
+
         c=Circle(pos[n],radius=0.05,alpha=0.5)
         ax.add_patch(c)
         G.node[n]['patch']=c
@@ -13,13 +24,14 @@ def draw_network(G,pos,ax,sg=None):
     for (u,v,d) in G.edges(data=True):
         n1=G.node[u]['patch']
         n2=G.node[v]['patch']
+
+        link = get_link(links, u, v)
         rad=0.1
         if (u,v) in seen:
             rad=seen.get((u,v))
             rad=(rad+np.sign(rad)*0.1)*-1
         alpha=0.5
         color='k'
-
         e = FancyArrowPatch(n1.center,n2.center,patchA=n1,patchB=n2,
                             arrowstyle='-|>',
                             connectionstyle='arc3,rad=%s'%rad,
@@ -27,6 +39,6 @@ def draw_network(G,pos,ax,sg=None):
                             lw=2,
                             alpha=alpha,
                             color=color)
-        seen[(u,v)]=rad
+        centroid = ((n1.get_center()[0] + n2.get_center()[0]) / 2, (n1.get_center()[1]+n2.get_center()[1]) / 2)
         ax.add_patch(e)
     return e
