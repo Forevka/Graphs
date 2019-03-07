@@ -12,7 +12,7 @@ def get_link(links, from_id, to_id):
         if link.from_id == from_id and link.to_id == to_id:
             return link
 
-def draw_network(G, pos, ax, links, sg=None):
+def draw_network(G, pos, ax, links, sg=None, path_links = []):
     for n in G:
 
         c=Circle(pos[n],radius=0.05,alpha=0.5)
@@ -31,7 +31,13 @@ def draw_network(G, pos, ax, links, sg=None):
             rad=seen.get((u,v))
             rad=(rad+np.sign(rad)*0.1)*-1
         alpha=0.5
-        color='k'
+        if len(path_links)>0:
+            if link in path_links:
+                color='r'
+            else:
+                color='k'
+        else:
+            color = 'k'
         e = FancyArrowPatch(n1.center,n2.center,patchA=n1,patchB=n2,
                             arrowstyle='-|>',
                             connectionstyle='arc3,rad=%s'%rad,

@@ -32,7 +32,14 @@ class Node:
         self.id = int(id)
         self.father_graph = father
         self.links = []
+        self.marked_links = []
         #pr(self.father_graph)
+
+    def unmark_links(self):
+        self.marked_links = []
+
+    def mark_link(self, link):
+        self.marked_links.append(link)
 
     def get_linked_from(self) -> Link:
         all_links = father.get_links()
@@ -45,7 +52,8 @@ class Node:
             yield i
 
     def get_cheapest_link(self, offset) -> Link:
-        s = sorted(list(self.get_linked_to()), key=getKey)
+        all_links = self.links
+        s = sorted([link for link in all_links if link not in self.marked_links], key=getKey)
         return s[offset]
 
     def add_link(self, to_id, weight, father) -> Link:
@@ -86,12 +94,14 @@ class Graph:
         temp_storage['nodes'].update({node_id: node})
         return node
 
+    #def mark_link(self, link):
+
+
     def _node_count(self, temp_st, st):
         for i in st:
             temp_st['nodes'].update({int(i[0]): Node(i[0], self)})
 
         return temp_st
-
 
     def load_graph_st(self, st) -> dict:
         t = {'nodes':{}, 'links':[]}
@@ -114,6 +124,11 @@ class Graph:
             self.update_node(t, i[0], i[1], i[2])
 
         return t['nodes'], t['links']
+
+    def get_link(self, from_id, to_id):
+        for link in self.links_list:
+            if link.from_id == from_id and link.to_id == to_id:
+                return link
 
     def get_links(self) -> list:
         return self.links_list
@@ -161,29 +176,39 @@ class Graph:
 
         return [i for i in l.keys() if l[i]==0]
 
-    def find_path(self, from_id, to_id):
-        '''not realized'''
-        stack = []
+    def find_path(self, from_id, to_id, stack = []):
+        '''dont good code need to rewrite'''
         stack.append(from_id)
         this_node = self.get_all_nodes()[from_id]
-        print(this_node)
+        #print(this_node)
         finded = False
-
+        offset = 0
         while(from_id != to_id):
-            current_link = this_node.get_cheapest_link(0)
-            print(current_link)
+            current_link = this_node.get_cheapest_link(offset)
+            offset +=1
+            this_node.mark_link(current_link)
+            #print(current_link)
             new_node = current_link.get_node_to()
-            print(new_node)
-            return self.find_path(new_node.id, to_id)
-            #finded = True
 
+            if new_node.id!=to_id:
+                while(new_node.id in self.get_isolated()):
+                    #print('isolated')
+                    #print(offset)
+                    this_node = current_link.get_node_from()
+                    #print(this_node)
+                    current_link = this_node.get_cheapest_link(offset-1)
+                    new_node = current_link.get_node_to()
+                    #print(new_node)
+                    offset+=1
+            self.find_path(new_node.id, to_id, stack = stack)
+            return stack
 
-
-    def show(self, save_path = None):
+    def show_path(self, from_id, to_id, save_path = None):
         G=nx.MultiDiGraph()
         fig, ax = plt.subplots()
         nodes = self.get_nodes()
         links = self.get_links()
+        #path = self.find_path(from_id, to_id)
         labels = {}
         for n, node in enumerate(nodes):
             G.add_node(node.id)
@@ -195,11 +220,43 @@ class Graph:
         nx.draw_networkx_labels(G, pos, labels ,font_size=11)
 
         ax=plt.gca()
-        draw_network(G,pos,ax, links)
+        draw_network(G, pos, ax, links, path_links = path_links)
         ax.autoscale()
         if save_path is not None:
             print('saving')
             plt.savefig(save_path)
+
+        plt.show()
+
+    def show(self, path = None, save_file = None):
+        G=nx.MultiDiGraph()
+        fig, ax = plt.subplots()
+        nodes = self.get_nodes()
+        links = self.get_links()
+        labels = {}
+        path_links = []
+        if path is not None:
+            for i in range(0, len(path), 1):
+                try:
+                    path_links.append(self.get_link(path[i], path[i+1]))
+                except:
+                    pass
+            print(path_links)
+        for n, node in enumerate(nodes):
+            G.add_node(node.id)
+            labels[n+1] = str(node.id)#get_literal(node.id)#str(node.id)
+        for link in links:
+            G.add_edge(link.from_id, link.to_id)
+
+        pos=nx.circular_layout(G)
+        nx.draw_networkx_labels(G, pos, labels ,font_size=11)
+
+        ax=plt.gca()
+        draw_network(G, pos, ax, links, path_links = path_links)
+        ax.autoscale()
+        if save_file is not None:
+            print('saving')
+            plt.savefig(save_file)
 
         plt.show()
 
@@ -213,21 +270,21 @@ class Graph:
         return representation
 
 graph = [
-    [1, 4, 5],
-    [2, 1, 2],
-    [3, 2, 3],
-    [3, 4, 2],
-    [2, 3, 4],
-    [4, 1, 5],
-    [1, 5, 2],
-    [2, 5, 2],
-    [3, 5, 2],
-    [4, 5, 3],
-    [5, 5, 2],
-    [1, 6, 7]
+    [1, 2, 5],
+    [2, 3, 2],
+    [3, 4, 3],
+    [4, 5, 2],
+    [5, 6, 1],
+    [6, 4, 3],
+    [4, 7, 1],
+    [1, 4, 2],
+    [3, 1, 3],
+    [4, 3, 1],
+    [1, 3, 2],
+    [3, 5, 2]
     ]
 
-g = Graph()
+g = Graph(st = graph)
 
 print('Інциденція:\n')
 m = g.matrix_incident()
@@ -245,5 +302,6 @@ print(g)
 
 print(g.get_nodes_power())
 print(g.get_isolated())
-print(g.find_path(1, 5))
-g.show('1.png')
+path = g.find_path(1, 6)
+print(path)
+g.show(path = path, save_file = '1.png')
