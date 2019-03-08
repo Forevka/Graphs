@@ -1,4 +1,5 @@
 from matplotlib.patches import FancyArrowPatch, Circle
+from curved_text import CurvedText
 import networkx as nx
 
 def get_literal(num):
@@ -31,20 +32,18 @@ def draw_network(G, pos, ax, links, sg=None, path_links = []):
             rad=seen.get((u,v))
             rad=(rad+np.sign(rad)*0.1)*-1
         alpha=0.5
-        if len(path_links)>0:
-            if link in path_links:
-                color='r'
-            else:
-                color='k'
-        else:
-            color = 'k'
+        color = 'k'
+        if link in path_links:
+            color='r'
         e = FancyArrowPatch(n1.center,n2.center,patchA=n1,patchB=n2,
+                            label = '123',
                             arrowstyle='-|>',
                             connectionstyle='arc3,rad=%s'%rad,
                             mutation_scale=20.0,
                             lw=2,
                             alpha=alpha,
                             color=color)
-        centroid = ((n1.get_center()[0] + n2.get_center()[0]) / 2, (n1.get_center()[1]+n2.get_center()[1]) / 2)
+        #centroid = ((n1.get_center()[0] + n2.get_center()[0]) / 2, (n1.get_center()[1]+n2.get_center()[1]) / 2)
+
         ax.add_patch(e)
     return e
