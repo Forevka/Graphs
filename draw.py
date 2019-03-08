@@ -5,13 +5,13 @@ import numpy as np
 
 #nx.draw_networkx_edges(G, pos, edge_color='b', alpha = 0.5, arrows=True)
 def draw_network(G,pos,ax,sg=None):
-
     for n in G:
         c=Circle(pos[n],radius=0.02,alpha=0.5)
         ax.add_patch(c)
         G.node[n]['patch']=c
         x,y=pos[n]
     seen={}
+    
     for (u,v,d) in G.edges(data=True):
         n1=G.node[u]['patch']
         n2=G.node[v]['patch']
@@ -32,17 +32,3 @@ def draw_network(G,pos,ax,sg=None):
         seen[(u,v)]=rad
         ax.add_patch(e)
     return e
-
-
-G=nx.MultiDiGraph([(1,2),(1,2),(2,3),(3,4),(2,4),
-                (1,2),(1,2),(1,2),(2,3),(3,4),(2,4)]
-                )
-
-pos=nx.spring_layout(G)
-ax=plt.gca()
-draw_network(G,pos,ax)
-ax.autoscale()
-plt.axis('equal')
-plt.axis('off')
-plt.savefig("graph.pdf")
-plt.show()
