@@ -68,5 +68,6 @@ dfs_n = g.dfs(1)
 g.show(path = shortest_path_d, save_file = '1.png')
 ```
 ![alt text](https://picua.org/images/2019/03/09/e05e7603b25e7a7c39423b7389a91b25.png)
+
 To do:
 Make path object with .visualize() method
