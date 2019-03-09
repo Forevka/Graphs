@@ -3,6 +3,7 @@ My graphs representation on python
 
 Features:
 Adjacency, Incidency Matrix
+
 Power of node and isolated node list
 
 Bellman-Ford, Dijkstra path findng
@@ -56,7 +57,7 @@ shortest_length_d = g.get_path_length(shortest_path)
 all_paths_b = g.bellman_ford(1)
 shortest_path_b = g.reconstruct_bf_path(1, 2)
 
-#Breath and Depth first searches
+#Breadth and Depth first searches
 bfs_p = list(g.bfs_paths(1, 2))
 bfs_n = g.bfs(1)
 
