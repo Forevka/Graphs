@@ -1,73 +1,8 @@
 import numpy as np
 import networkx as nx
 import matplotlib.pyplot as plt
+from objects import Node, Link
 from misc import draw_network, get_literal, getKey
-
-class Link:
-    def __init__(self, from_id, to_id, weight, father):
-        self.from_id = int(from_id)
-        self.to_id = int(to_id)
-        self.weight = int(weight)
-        self.father_graph = father
-
-    def get_node_from(self):
-        nodes = self.father_graph.get_all_nodes()
-        return nodes[self.from_id]
-
-    def get_node_to(self):
-        nodes = self.father_graph.get_all_nodes()
-        return nodes[self.to_id]
-
-    def get_weight(self):
-        return self.weight
-
-    def __repr__(self):
-        return str(self)
-
-    def __str__(self):
-        return "Link from {} to {} weight {}".format(self.from_id, self.to_id, self.weight)
-
-class Node:
-    def __init__(self, id, father):
-        self.id = int(id)
-        self.father_graph = father
-        self.links = []
-        self.marked_links = []
-
-    def unmark_links(self):
-        self.marked_links = []
-
-    def mark_link(self, link):
-        self.marked_links.append(link)
-
-    def get_linked_from(self) -> Link:
-        all_links = father.get_links()
-        for link in all_links:
-            if link.from_id == self.id:
-                yield link
-
-    def get_linked_to(self) -> Link:# pass
-        for i in self.links:
-            yield i
-
-    def get_cheapest_link(self, offset) -> Link:
-        all_links = self.links
-        s = sorted([link for link in all_links if link not in self.marked_links], key=getKey)
-        print(s)
-        return s[offset]
-
-    def add_link(self, to_id, weight, father) -> Link:
-        new_link = Link(self.id, to_id, weight, father)
-        self.links.append(new_link)
-        return new_link
-
-    def __repr__(self):
-        return str(self)
-
-    def __str__(self):
-        return "Node {} Links count: {}".format(self.id, len(self.links))
-
-
 
 class Graph:
     def __init__(self, file = 'first.txt', st = None):
@@ -76,9 +11,8 @@ class Graph:
             self.nodes_list, self.links_list = self.load_graph_file()
         else:
             self.nodes_list, self.links_list = self.load_graph_st(st)
-        print(self.nodes_list)
 
-    def find_all_paths(self, start, end, path = []):
+    def find_all_paths(self, start, end, path = []) -> list:
         graph = self.nodes_for_dejkstra()
         path = path + [start]
         if start == end:
@@ -93,7 +27,93 @@ class Graph:
                     paths.append(newpath)
         return paths
 
+    def bfs(self, start) -> list:
+        '''
+            returning all nodes from graph with bfs algo
+            start - first node where to start
+
+            FIFO structure
+        '''
+        graph = self.nodes_for_dbfs()
+        visited, queue = set(), [start]
+        while queue:
+            vertex = queue.pop(0)
+            if vertex not in visited:
+                visited.add(vertex)
+                queue.extend(graph[vertex] - visited)
+        return visited
+
+    def bfs_paths(self, start, end) -> list:
+        '''
+            finding all possible path with bfs algo
+            start - where to start
+            end - where to end
+
+            FIFO structure
+        '''
+        graph = self.nodes_for_dbfs()
+        queue = [(start, [start])]
+        while queue:
+            (vertex, path) = queue.pop(0)
+            for next in graph[vertex] - set(path):
+                if next == end:
+                    yield path + [next]
+                else:
+                    queue.append((next, path + [next]))
+
+
+    def dfs(self, start, visited=None) -> list:
+        '''
+            simply returning all nodes from graph with dfs algorithm
+            start - first node where to start
+            visited - set of visited nodes
+
+            LIFO structure
+        '''
+        graph = self.nodes_for_dbfs()
+        if visited is None:
+            visited = set()
+        visited.add(start)
+        for next in graph[start] - visited:
+            self.dfs(next, visited)
+        return visited
+
+    def dfs_paths(self, start, end) -> list:
+        '''
+            finding all possible paths from start_node to end_node
+            with dfs algorithm
+            start - where to start node
+            end - where to end node
+
+            LIFO structure
+        '''
+        graph = self.nodes_for_dbfs()
+        stack = [(start, [start])]
+        while stack:
+            (vertex, path) = stack.pop()
+            for next in graph[vertex] - set(path):
+                if next == end:
+                    yield path + [next]
+                else:
+                    stack.append((next, path + [next]))
+
+        return stack
+
     def nodes_for_dejkstra(self) -> dict:
+        '''
+            returning oriented graph in representation which need for
+            better performance dejkstra algo
+
+            graph = {
+              1: {1: 4},
+              2: {1: 4, 3: 6, 4: 3, 5: 6},
+              3: {2: 6, 5: 4},
+              4: {2: 3, 5: 2},
+              5: {2: 6, 3: 4, 4:2, 6: 5},
+              6: {5: 5}
+            }
+            where key is node and value - weight
+        '''
         graph = {}
         for key, node in self.get_all_nodes().items():
             for link in node.get_linked_to():
@@ -104,7 +124,17 @@ class Graph:
 
         return graph
 
-    def start_dejkstra(self, start, end):
+    def nodes_for_dbfs(self) -> dict:
+        '''
+            smth like nodes_for_dejkstra but without weight
+            and not oriented
+        '''
+        g = self.nodes_for_dejkstra()
+        for key, nodes in g.items():
+            g.update({key:set([i for i in nodes.keys()])})
+        return g
+
+    def start_dejkstra(self, start, end) -> list:
         opened_node = {} #p #словарь {открытая вершина : её метка}
         short_path = {} #b #словарь для отслеживания короткого пути
         visited_nodes = [] #t #список посещённых вершин
@@ -118,7 +148,7 @@ class Graph:
         return self.dejkstra(graph, current_node, opened_node,
                             visited_nodes, short_path, end_node)
 
-    def dejkstra(self, graph, current_node, opened_node, visited_nodes, short_path, end_node):
+    def dejkstra(self, graph, current_node, opened_node, visited_nodes, short_path, end_node) -> list:
         print('\n  Обходим всех соседей текущей вершины')
         node_count = len(graph)
         for x in graph[current_node]: #для каждого соседа (х) текущей вершины (current_node)
@@ -154,7 +184,6 @@ class Graph:
             while True:
                 if short_path[end_node] == -1: #значение ключа (-1) имеет начальная вершина
                                #вот её и ищем в словаре (short_path)
-                    print('Кратчайший путь от начальной до конечной вершины =', s)
                     return s
                 end_node = short_path[end_node] #теперь последней вершиной будет предыдущая
                 s.insert(0, end_node) #вставляем (е) в список (s) по индексу (0)
@@ -227,7 +256,7 @@ class Graph:
 
         return t['nodes'], t['links']
 
-    def get_link(self, from_id, to_id):
+    def get_link(self, from_id, to_id) -> Link:
         for link in self.links_list:
             if link.from_id == from_id and link.to_id == to_id:
                 return link
@@ -241,7 +270,7 @@ class Graph:
     def get_all_nodes(self) -> dict:
         return self.nodes_list
 
-    def matrix_incident(self):
+    def matrix_incident(self) -> np.matrix:
         matrix = np.zeros(shape = (len(self.nodes_list), len(self.links_list)))
 
         for n, i in enumerate(self.links_list):
@@ -250,7 +279,7 @@ class Graph:
 
         return matrix
 
-    def matrix_adjacency(self):
+    def matrix_adjacency(self) -> np.matrix:
         matrix = np.zeros(shape = (len(self.nodes_list), len(self.nodes_list)))
 
         for node in self.nodes_list.values():
@@ -268,13 +297,13 @@ class Graph:
 
         return l
 
-    def nodes_id_to_links(self, path):
+    def nodes_id_to_links(self, path) -> list:
         return [self.get_link(path[i], path[i+1]) for i in range(0, len(path), 1) if i<len(path)-1]
 
-    def get_path_length(self, path):
+    def get_path_length(self, path) -> list:
         return sum([self.get_link(path[i], path[i+1]).get_weight() for i in range(0, len(path), 1) if i<len(path)-1])
 
-    def get_isolated(self):
+    def get_isolated(self) -> list:
         nodes = self.get_nodes()
         l = dict((num, 0) for num in range(1, len(nodes)+1, 1))
         for node in nodes:
@@ -350,22 +379,21 @@ class Graph:
         return representation
 
 graph = [
-    [1, 2, 20],
+    [1, 2, 13],
+    [1, 6, 2],
     [2, 3, 2],
-    [3, 4, 3],
-    [4, 5, 2],
+    [3, 5, 3],
+    [4, 8, 3],
+    [4, 2, 2],
+    [5, 2, 1],
     [5, 6, 1],
-    [6, 4, 3],
-    [1, 4, 2],
-    [3, 1, 3],
-    [4, 3, 1],
-    [1, 3, 2],
-    [3, 5, 2],
-    [5, 2, 2],
+    [6, 1, 3],
+    [6, 7, 2],
+    [7, 8, 1],
     [6, 2, 2],
-    [7, 1, 1],
-    [5, 7, 4],
-    [6, 8, 3]
+    [6, 3, 3],
+    [6, 4, 1],
+    [6, 5, 2],
     ]
 
 g = Graph(st = graph)
@@ -386,11 +414,22 @@ print(g)
 
 print(g.get_nodes_power())
 print(g.get_isolated())
-#path = g.my_find_path(1, 2)
-#print(path)
 shortest_path = g.start_dejkstra(1, 2)
 all_paths = g.find_all_paths(1, 2)
 shortest_length = g.get_path_length(shortest_path)
-print(shortest_length)
-print(all_paths)
+bfs_p = list(g.bfs_paths(1, 2))
+bfs_n = g.bfs(1)
+
+dfs_p = list(g.dfs_paths(1, 2))
+dfs_n = g.dfs(1)
+
+print("Найкоротший шлях знайдений через алгоритм Дейкстри: ", shortest_path)
+print("Довжина найкоротшого шляху:", shortest_length)
+print("Всі можливі шляхи:\n", '\n'.join([str(i) for i in all_paths]))
+
+print("Всі можливі шляхи знайдені через BFS:\n", '\n'.join([str(i) for i in bfs_p]))
+print("Всі вершини знайдені через BFS:", bfs_n)
+
+print("Всі можливі шляхи знайдені через DFS:\n", '\n'.join([str(i) for i in dfs_p]))
+print("Всі вершини знайдені через DFS:", dfs_n)
 g.show(path = shortest_path, save_file = '1.png')

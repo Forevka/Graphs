@@ -1,5 +1,4 @@
 from matplotlib.patches import FancyArrowPatch, Circle
-from curved_text import CurvedText
 import networkx as nx
 
 def get_literal(num):
