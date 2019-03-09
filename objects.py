@@ -1,3 +1,7 @@
+class Path:
+    def __init__(self, path_list):
+        pass
+
 class Link:
     def __init__(self, from_id, to_id, weight, father):
         self.from_id = int(from_id)
