@@ -34,21 +34,25 @@ for n, i in enumerate(mm):
 
 #print(g)
 
-
 print("Степені точок: ", g.get_nodes_power())
 print("Ізольовані точки: ", g.get_isolated())
-shortest_path = g.start_dejkstra(1, 2)
-all_paths = g.find_all_paths(1, 2)
-shortest_length = g.get_path_length(shortest_path)
+dejkstra_path = g.start_dejkstra(1, 4)
+
+bellman_ford_path = g.reconstruct_bf_path(1, 2)
+bellman_ford_paths = g.bellman_ford(1)
+
 bfs_p = list(g.bfs_paths(1, 2))
 bfs_n = g.bfs(1)
 
 dfs_p = list(g.dfs_paths(1, 2))
 dfs_n = g.dfs(1)
 
-print("Найкоротший шлях знайдений через алгоритм Дейкстри: ", shortest_path)
-print("Довжина найкоротшого шляху:", shortest_length)
-print("Всі можливі шляхи:\n", '\n'.join([str(i) for i in all_paths]))
+print("Найкоротший шлях знайдений через алгоритм Дейкстри: ", dejkstra_path)
+
+print("Всі можливі шляхи знайдені через Бельмана-Форда", bellman_ford_paths)
+print("Найкоротший шлях знайдений через Бельмана-Форда", bellman_ford_path)
+
+print("Довжина найкоротшого шляху:", dejkstra_path.get_length())
 
 print("Всі можливі шляхи знайдені через BFS:\n", '\n'.join([str(i) for i in bfs_p]))
 print("Всі вершини знайдені через BFS:", bfs_n)
@@ -56,6 +60,4 @@ print("Всі вершини знайдені через BFS:", bfs_n)
 print("Всі можливі шляхи знайдені через DFS:\n", '\n'.join([str(i) for i in dfs_p]))
 print("Всі вершини знайдені через DFS:", dfs_n)
 
-print("Всі можливі шляхи знайдені через Бельмана-Форда", g.bellman_ford(1))
-print("Найкоротший шлях знайдений через Бельмана-Форда", g.reconstruct_bf_path(1, 2))
-g.show(path = shortest_path, save_file = '1.png')
+bellman_ford_path()

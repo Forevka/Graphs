@@ -1,6 +1,31 @@
 class Path:
-    def __init__(self, path_list):
-        pass
+    def __init__(self, father, path_list):
+        self.father = father
+        self.path = self.nodes_id_to_links(path_list)
+
+    def get_start(self):
+        return self.path[0]
+
+    def get_end(self):
+        return self.path[-1]
+
+    def nodes_id_to_links(self, path) -> list:
+        return [self.father.get_link(path[i], path[i+1]) for i in range(0, len(path), 1) if i<len(path)-1]
+
+    def get_length(self) -> int:
+        return sum([i.weight for i in self.path])
+
+    def __getitem__(self, key):
+        return self.path[key]
+
+    def __len__(self) -> int:
+        return len(self.path)
+
+    def __call__(self, save_file = None):
+        return self.father.show(path = self.path, save_file = save_file)
+
+    def __str__(self):
+        return "Path: {}".format(self.path)
 
 class Link:
     def __init__(self, from_id, to_id, weight, father):
@@ -24,7 +49,7 @@ class Link:
         return str(self)
 
     def __str__(self):
-        return "Link from {} to {} weight {}".format(self.from_id, self.to_id, self.weight)
+        return "Link: from {} to {} weight {}".format(self.from_id, self.to_id, self.weight)
 
 class Node:
     def __init__(self, id, father):
@@ -63,4 +88,4 @@ class Node:
         return str(self)
 
     def __str__(self):
-        return "Node {} Links count: {}".format(self.id, len(self.links))
+        return "Node: {} ID Links count: {}".format(self.id, len(self.links))

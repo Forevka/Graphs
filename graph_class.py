@@ -1,7 +1,7 @@
 import numpy as np
 import networkx as nx
 import matplotlib.pyplot as plt
-from objects import Node, Link
+from objects import Node, Link, Path
 from misc import draw_network, get_literal, getKey
 from exception import CantReach
 
@@ -39,17 +39,15 @@ class Graph:
 
         return d, p, path_list
 
-    def reconstruct_bf_path(self, start, end):
+    def reconstruct_bf_path(self, start, end) -> Path:
         d, p = self.bellman_ford(start);
         graph = self.nodes_to_dict()
         cur = p[end]
         path = [end]+[cur]
         for k in range(len(graph)-1):
-            print(cur)
-
             cur = p[cur]
             if cur is None:
-                return path
+                return self.create_path(path[::-1])
             path.append(cur)
 
 
@@ -65,13 +63,13 @@ class Graph:
                 for v in graph[u]:
                     d, p, path_list = self.relax(u, v, graph, d, p, path_list)
 
-        print(path_list)
-        # Step 3: check for negative-weight cycles
         for u in graph:
             for v in graph[u]:
                 if d[v] <= d[u] + graph[u][v]:
+                    pass
                     #raise Exception("negative")
-                    print('negative')
+                    #print('negative')
+
         return d, p
 
     def find_all_paths(self, start, end, path = []) -> list:
@@ -136,6 +134,7 @@ class Graph:
         if visited is None:
             visited = set()
         visited.add(start)
+        
         for next in graph[start] - visited:
             self.dfs(next, visited)
         return visited
@@ -196,7 +195,7 @@ class Graph:
             g.update({key:set([i for i in nodes.keys()])})
         return g
 
-    def start_dejkstra(self, start, end) -> list:
+    def start_dejkstra(self, start, end) -> Path:
         opened_node = {} #p #словарь {открытая вершина : её метка}
         short_path = {} #b #словарь для отслеживания короткого пути
         visited_nodes = [] #t #список посещённых вершин
@@ -204,16 +203,14 @@ class Graph:
         end_node = end #e #конечная вершина
         opened_node[current_node] = 0
         short_path[current_node] = -1
-        #print('\n  Начальная текущая вершина v =', v)
         graph = self.nodes_to_dict()
-        #print(graph)
+
         return self.dejkstra(graph, current_node, opened_node,
                             visited_nodes, short_path, end_node)
 
     def dejkstra(self, graph, current_node, opened_node, visited_nodes, short_path, end_node) -> list:
-        #print('\n  Обходим всех соседей текущей вершины')
         node_count = len(graph)
-        #short_path[end_node] = -1
+
         for x in graph[current_node]: #для каждого соседа (х) текущей вершины (current_node)
             xm = opened_node[current_node] + graph[current_node][x] #новая метка соседа (xm) =
                                 #метка текущей вершины (p[current_node]) +
@@ -238,9 +235,6 @@ class Graph:
         #print('visited_nodes =', visited_nodes)
 
         if node_count <= len(visited_nodes): # Условие выхода из функции
-            #print('\nВсё!\nВершины и их метки =', opened_node)
-            #print('Словарь для отслеживания пути =', short_path)
-
             s = [] #кратчайший путь
             s.insert(0, end_node) #вставляем (е) в список (s) по индексу (0)
 
@@ -248,14 +242,13 @@ class Graph:
                 es = short_path.get(end_node, None)
                 if es == -1: #значение ключа (-1) имеет начальная вершина
                                #вот её и ищем в словаре (short_path)
-                    return s
+                    return self.create_path(s)
                 elif es is None:
                     raise CantReach("Cant reach {}".format(end_node))
                 end_node = short_path[end_node] #теперь последней вершиной будет предыдущая
                 s.insert(0, end_node) #вставляем (е) в список (s) по индексу (0)
 
             return  s
-        #print(opened_node)
         dm = opened_node[visited_nodes[0]]
         #print('\n  Находим вершину с минимальной меткой за исключением тех, что уже в visited_nodes')
         for d in opened_node: #вершина (d) с минимальной меткой из словаря (opened_node)
@@ -273,11 +266,12 @@ class Graph:
         #print('Вершина d =', d, 'имеет минимальную метку dm =', dm, \
               #'\nтеперь текущей вершиной current_node будет вершина d')
         current_node = d #теперь текущей вершиной current_node будет вершина d
-
-        #print('\n  Рекурсивно вызываем функцию Дейкстры с параметрами {}, opened_node, visited_nodes, short_path, end_node'.format(current_node))
         return self.dejkstra(graph, current_node, opened_node,
                             visited_nodes, short_path, end_node)
 
+
+    def create_path(self, path) -> Path:
+        return Path(self, path)
 
     def update_node(self, temp_storage, node_id, link_to, weight) -> Node:
         node = temp_storage['nodes'].get(node_id)
@@ -323,6 +317,9 @@ class Graph:
 
         return t['nodes'], t['links']
 
+    def nodes_id_to_links(self, path) -> list:
+        return [self.get_link(path[i], path[i+1]) for i in range(0, len(path), 1) if i<len(path)-1]
+
     def get_link(self, from_id, to_id) -> Link:
         for link in self.links_list:
             if link.from_id == from_id and link.to_id == to_id:
@@ -364,12 +361,6 @@ class Graph:
 
         return l
 
-    def nodes_id_to_links(self, path) -> list:
-        return [self.get_link(path[i], path[i+1]) for i in range(0, len(path), 1) if i<len(path)-1]
-
-    def get_path_length(self, path) -> list:
-        return sum([self.get_link(path[i], path[i+1]).get_weight() for i in range(0, len(path), 1) if i<len(path)-1])
-
     def get_isolated(self) -> list:
         nodes = self.get_nodes()
         l = dict((num, 0) for num in range(1, len(nodes)+1, 1))
@@ -386,9 +377,8 @@ class Graph:
         nodes = self.get_nodes()
         links = self.get_links()
         labels = {}
-        path_links = []
-        if path is not None:
-            path_links = self.nodes_id_to_links(path)
+        if not isinstance(path[0], Link):
+            path = self.nodes_id_to_links(path)
         for n, node in enumerate(nodes):
             G.add_node(node.id)
             labels[n+1] = str(node.id)#get_literal(node.id)#str(node.id)
@@ -400,7 +390,7 @@ class Graph:
         bbox_props = dict(boxstyle="round,pad=0.3", ec="k", lw=2)
         nx.draw_networkx_edge_labels(G,pos,bbox = bbox_props, label_pos = 0.6, font_size = 8, alpha = 1, edge_labels={(u, v): d["weight"] for u, v, d in G.edges(data=True)})
         ax=plt.gca()
-        draw_network(G, pos, ax, links, path_links = path_links)
+        draw_network(G, pos, ax, links, path_links = path)
         ax.autoscale()
         #nx.draw(G, pos, with_labels=True)
         if save_file is not None:
@@ -410,7 +400,7 @@ class Graph:
         plt.show()
 
     def __str__(self):
-        representation = "Graph with:\n"
+        representation = "Graph: \n"
         for node in self.get_nodes():
             representation += " "*4+str(node)+"\n"
             for link in node.get_linked_to():

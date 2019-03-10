@@ -14,7 +14,6 @@ def get_link(links, from_id, to_id):
 
 def draw_network(G, pos, ax, links, sg=None, path_links = []):
     for n in G:
-
         c=Circle(pos[n],radius=0.05,alpha=0.5)
         ax.add_patch(c)
         G.node[n]['patch']=c
