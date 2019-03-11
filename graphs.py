@@ -1,4 +1,4 @@
-from graph_class import Graph
+from Graph import Graph
 from exception import CantReach
 
 graph = [
@@ -36,10 +36,11 @@ for n, i in enumerate(mm):
 
 print("Степені точок: ", g.get_nodes_power())
 print("Ізольовані точки: ", g.get_isolated())
-dejkstra_path = g.start_dejkstra(1, 4)
+dejkstra_path = g.dejkstra_path(1)
 
-bellman_ford_path = g.reconstruct_bf_path(1, 2)
-bellman_ford_paths = g.bellman_ford(1)
+bellman_ford_path = g.bf_path(1)
+print(dejkstra_path)
+print(bellman_ford_path)
 
 bfs_p = list(g.bfs_paths(1, 2))
 bfs_n = g.bfs(1)
@@ -47,17 +48,11 @@ bfs_n = g.bfs(1)
 dfs_p = list(g.dfs_paths(1, 2))
 dfs_n = g.dfs(1)
 
-print("Найкоротший шлях знайдений через алгоритм Дейкстри: ", dejkstra_path)
-
-print("Всі можливі шляхи знайдені через Бельмана-Форда", bellman_ford_paths)
-print("Найкоротший шлях знайдений через Бельмана-Форда", bellman_ford_path)
-
-print("Довжина найкоротшого шляху:", dejkstra_path.get_length())
+#print("Довжина найкоротшого шляху:", dejkstra_path.get_length())
 
 print("Всі можливі шляхи знайдені через BFS:\n", '\n'.join([str(i) for i in bfs_p]))
 print("Всі вершини знайдені через BFS:", bfs_n)
 
 print("Всі можливі шляхи знайдені через DFS:\n", '\n'.join([str(i) for i in dfs_p]))
 print("Всі вершини знайдені через DFS:", dfs_n)
-
-bellman_ford_path()
+#dejkstra_path.show('123.png')

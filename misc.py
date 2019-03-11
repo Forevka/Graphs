@@ -12,6 +12,16 @@ def get_link(links, from_id, to_id):
         if link.from_id == from_id and link.to_id == to_id:
             return link
 
+def update_annot(ind):
+
+    pos = sc.get_offsets()[ind["ind"][0]]
+    annot.xy = pos
+    text = "{}, {}".format(" ".join(list(map(str,ind["ind"]))),
+                           " ".join([names[n] for n in ind["ind"]]))
+    annot.set_text(text)
+    annot.get_bbox_patch().set_facecolor(cmap(norm(c[ind["ind"][0]])))
+    annot.get_bbox_patch().set_alpha(0.4)
+
 def draw_network(G, pos, ax, links, sg=None, path_links = []):
     for n in G:
         c=Circle(pos[n],radius=0.05,alpha=0.5)
