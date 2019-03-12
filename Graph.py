@@ -125,11 +125,11 @@ class Graph:
                     queue.append((next, path + [next]))
 
 
-    def dfs(self, start, visited=None) -> list:
+    def dfs(self, start, visited = None, reverse_order = None) -> list:
         '''
             simply returning all nodes from graph with dfs algorithm
             start - first node where to start
-            visited - set of visited nodes
+            visited - set with all visited nodes
 
             LIFO structure
         '''
@@ -139,8 +139,38 @@ class Graph:
         visited.add(start)
 
         for next in graph[start] - visited:
-            self.dfs(next, visited)
+            self.dfs(next, visited = visited, reverse_order = reverse_order)
+        if isinstance(reverse_order, list):
+            reverse_order.append(start)
         return visited
+
+    def topological_sort(self) -> list:
+        '''
+            topological sort using recursive DFS
+
+            graph = [
+                [1, 6, 2],
+                [1, 2, 2],
+                [1, 3, 2],
+                [2, 5, 3],
+                [4, 6, 3],
+                [4, 7, 2],
+                [4, 5, 1],
+                [4, 3, 1],
+                [6, 3, 1],
+                [7, 1, 1],
+                [7, 5, 1],
+            ]
+
+            return: [5, 2, 3, 6, 1, 7, 4]
+        '''
+        visited = set()
+        reversePostOrder = []
+        graph = self.nodes_for_dbfs()
+        for node in graph.keys():
+            if node not in visited:
+                self.dfs(node, visited = visited, reverse_order = reversePostOrder)
+        return reversePostOrder
 
     def dfs_paths(self, start, end) -> list:
         '''
@@ -162,6 +192,47 @@ class Graph:
                     stack.append((next, path + [next]))
 
         return stack
+
+    def fw_path(self, start = None, end = None) -> Path:
+        d, p = self.floyd_warshall();
+        if end is not None and start is not None:
+            '''return path based on floyd_warshall algo'''
+            need_node = p[start]
+            cur = need_node[end]
+            path = [end]+[cur]
+            for k in range(len(need_node)-1):
+                cur = need_node[cur]
+                if cur==-1:
+                    return self.create_path(path[::-1])
+                path.append(cur)
+        else:
+            '''return distance matrix from all to all nodes'''
+            return d
+
+    def floyd_warshall(self):
+        graph = self.nodes_to_dict()
+        dist = {}
+        pred = {}
+        for u in graph:
+            dist[u] = {}
+            pred[u] = {}
+            for v in graph:
+                dist[u][v] = 1000
+                pred[u][v] = -1
+            dist[u][u] = 0
+            for neighbor in graph[u]:
+                dist[u][neighbor] = graph[u][neighbor]
+                pred[u][neighbor] = u
+
+        for t in graph:
+            for u in graph:
+                for v in graph:
+                    newdist = dist[u][t] + dist[t][v]
+                    if newdist < dist[u][v]:
+                        dist[u][v] = newdist
+                        pred[u][v] = pred[t][v] # route new path through t
+
+        return dist, pred
 
     def nodes_to_dict(self) -> dict:
         '''
@@ -191,7 +262,14 @@ class Graph:
     def nodes_for_dbfs(self) -> dict:
         '''
             smth like nodes_for_dejkstra but without weight
-            and not oriented
+            graph = {
+              1: {1},
+              2: {1, 3, 4, 5},
+              3: {2, 5},
+              4: {2, 5},
+              5: {2, 3, 4, 6},
+              6: {5}
+            }
         '''
         g = self.nodes_to_dict()
         for key, nodes in g.items():
@@ -305,6 +383,7 @@ class Graph:
     def load_graph_st(self, st) -> dict:
         t = {'nodes':{}, 'links':[]}
         t = self._node_count(t, st)
+        print(t)
         for line in st:
             id, to_id, w = line[0], line[1], line[2]
             node = self.update_node(t, id, to_id, w)
@@ -384,8 +463,9 @@ class Graph:
         nodes = self.get_nodes()
         links = self.get_links()
         labels = {}
-        if not isinstance(path[0], Link):
-            path = self.nodes_id_to_links(path)
+        if path:
+            if not isinstance(path[0], Link):
+                path = self.nodes_id_to_links(path)
         for n, node in enumerate(nodes):
             G.add_node(node.id)
             labels[n+1] = str(node.id)#get_literal(node.id)#str(node.id)
@@ -395,7 +475,7 @@ class Graph:
         pos=nx.circular_layout(G, center = [0,0])
         nx.draw_networkx_labels(G, pos, labels ,font_size=11)
         bbox_props = dict(boxstyle="round,pad=0.3", ec="k", lw=2)
-        #nx.draw_networkx_edge_labels(G,pos,bbox = bbox_props, label_pos = 0.6, font_size = 8, alpha = 1, edge_labels={(u, v): d["weight"] for u, v, d in G.edges(data=True)})
+        nx.draw_networkx_edge_labels(G,pos,bbox = bbox_props, label_pos = 0.6, font_size = 8, alpha = 1, edge_labels={(u, v): d["weight"] for u, v, d in G.edges(data=True)})
         ax=plt.gca()
         draw_network(G, pos, ax, links, path_links = path)
         ax.autoscale()

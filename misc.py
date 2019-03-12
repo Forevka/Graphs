@@ -22,7 +22,7 @@ def update_annot(ind):
     annot.get_bbox_patch().set_facecolor(cmap(norm(c[ind["ind"][0]])))
     annot.get_bbox_patch().set_alpha(0.4)
 
-def draw_network(G, pos, ax, links, sg=None, path_links = []):
+def draw_network(G, pos, ax, links, sg=None, path_links = None):
     for n in G:
         c=Circle(pos[n],radius=0.05,alpha=0.5)
         ax.add_patch(c)
@@ -34,15 +34,17 @@ def draw_network(G, pos, ax, links, sg=None, path_links = []):
         n1=G.node[u]['patch']
         n2=G.node[v]['patch']
 
-        link = get_link(links, u, v)
+
         rad=0.1
         if (u,v) in seen:
             rad=seen.get((u,v))
             rad=(rad+np.sign(rad)*0.1)*-1
         alpha=0.5
         color = 'k'
-        if link in path_links:
-            color='r'
+        if path_links:
+            link = get_link(links, u, v)
+            if link in path_links:
+                color='r'
         e = FancyArrowPatch(n1.center,n2.center,patchA=n1,patchB=n2,
                             label = '123',
                             arrowstyle='-|>',
