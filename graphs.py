@@ -6,13 +6,14 @@ graph = [
     [1, 3, 4],
     [3, 2, 3],
     [3, 4, 1],
-    [4, 3, 2]
+    [4, 3, 2],
+    [5,5,None]
     ]
 
 g = Graph(st = graph)
 #print(g.fw_path(start = 4, end=3))
 print('Інциденція:\n')
-m = g.matrix_incident()
+m = g.matrix_incidence()
 for n, i in enumerate(m):
     print(n+1, ":", i)
 
@@ -22,6 +23,9 @@ mm = g.matrix_adjacency()
 for n, i in enumerate(mm):
     print(n+1, ":", i)
 
+
+hamilton = g.check_hamilton_cycle(1)
+print("Без циклів" if hamilton is None else ("Цикл з вершини {} на шляху {}".format(hamilton[0], hamilton[1])))
 
 print("Степені точок: ", g.get_nodes_power())
 print("Ізольовані точки: ", g.get_isolated())

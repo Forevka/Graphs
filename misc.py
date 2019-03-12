@@ -4,7 +4,10 @@ import networkx as nx
 def get_literal(num):
     return chr(64+num)
 
-def getKey(custom):
+def getKeyID(custom):
+    return custom.id
+
+def getKeyWeight(custom):
     return custom.weight
 
 def get_link(links, from_id, to_id):

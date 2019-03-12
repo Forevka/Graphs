@@ -35,7 +35,7 @@ class Link:
     def __init__(self, from_id, to_id, weight, father):
         self.from_id = int(from_id)
         self.to_id = int(to_id)
-        self.weight = int(weight)
+        self.weight = int(weight) if weight is not None else weight
         self.father_graph = father
 
     def get_node_from(self):
@@ -80,7 +80,7 @@ class Node:
 
     def get_cheapest_link(self, offset) -> Link:
         all_links = self.links
-        s = sorted([link for link in all_links if link not in self.marked_links], key=getKey)
+        s = sorted([link for link in all_links if link not in self.marked_links], key=getKeyWeight)
         return s[offset]
 
     def add_link(self, to_id, weight, father) -> Link:

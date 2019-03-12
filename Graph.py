@@ -2,7 +2,7 @@ import numpy as np
 import networkx as nx
 import matplotlib.pyplot as plt
 from Node_Link_Path import Node, Link, Path
-from misc import draw_network, get_literal, getKey
+from misc import draw_network, get_literal, getKeyWeight, getKeyID
 from exception import CantReach
 
 class Graph:
@@ -30,9 +30,10 @@ class Graph:
             if distance between node_id and neigh_id lower than we have
             remember this distance and node
         '''
-        if d[neigh_id] > d[node_id] + graph[node_id][neigh_id]:
+        node_weight = graph[node_id][neigh_id] if graph[node_id][neigh_id] is not None else 0
+        if d[neigh_id] > d[node_id] + node_weight:
             # Record this lower distance
-            d[neigh_id]  = d[node_id] + graph[node_id][neigh_id]
+            d[neigh_id]  = d[node_id] + node_weight
             p[neigh_id] = node_id
             #print(node_id)
             path_list[neigh_id].append(node_id)
@@ -68,7 +69,8 @@ class Graph:
 
         for u in graph:
             for v in graph[u]:
-                if d[v] <= d[u] + graph[u][v]:
+                node_weight = graph[u][v] if graph[u][v] is not None else 0
+                if d[v] <= d[u] + node_weight:
                     pass
                     #raise Exception("negative")
                     #print('negative')
@@ -380,6 +382,25 @@ class Graph:
 
         return temp_st
 
+    def check_hamilton_cycle(self, pt, path=[]):
+        G = self.nodes_for_dbfs()
+        size = len(G)
+        if pt not in set(path):
+            path.append(pt)
+            if len(path)==size:
+                return path
+            for pt_next in G.get(pt, []):
+                res_path = [i for i in path]
+                candidate = self.check_hamilton_cycle(pt_next, res_path)
+                if candidate is not None:  # skip loop or dead end
+                    return candidate
+            print('path {} is a dead end'.format(path))
+        else:
+            return pt, path
+            #print('pt {} already in path {}'.format(pt, path))
+
+        return None
+
     def load_graph_st(self, st) -> dict:
         t = {'nodes':{}, 'links':[]}
         t = self._node_count(t, st)
@@ -415,12 +436,12 @@ class Graph:
         return self.links_list
 
     def get_nodes(self) -> list:
-        return self.nodes_list.values()
+        return sorted(self.nodes_list.values(), key = getKeyID)
 
     def get_all_nodes(self) -> dict:
         return self.nodes_list
 
-    def matrix_incident(self) -> np.matrix:
+    def matrix_incidence(self) -> np.matrix:
         matrix = np.zeros(shape = (len(self.nodes_list), len(self.links_list)))
 
         for n, i in enumerate(self.links_list):
@@ -467,6 +488,8 @@ class Graph:
             if not isinstance(path[0], Link):
                 path = self.nodes_id_to_links(path)
         for n, node in enumerate(nodes):
+            print(node)
+            print(node.id)
             G.add_node(node.id)
             labels[n+1] = str(node.id)#get_literal(node.id)#str(node.id)
         for link in links:
@@ -475,7 +498,7 @@ class Graph:
         pos=nx.circular_layout(G, center = [0,0])
         nx.draw_networkx_labels(G, pos, labels ,font_size=11)
         bbox_props = dict(boxstyle="round,pad=0.3", ec="k", lw=2)
-        nx.draw_networkx_edge_labels(G,pos,bbox = bbox_props, label_pos = 0.6, font_size = 8, alpha = 1, edge_labels={(u, v): d["weight"] for u, v, d in G.edges(data=True)})
+        nx.draw_networkx_edge_labels(G,pos,bbox = bbox_props, label_pos = 0.6, font_size = 8, alpha = 1, edge_labels={(u, v): d["weight"] for u, v, d in G.edges(data=True) if d["weight"] is not None})
         ax=plt.gca()
         draw_network(G, pos, ax, links, path_links = path)
         ax.autoscale()
