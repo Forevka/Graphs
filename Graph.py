@@ -14,17 +14,6 @@ class Graph:
         else:
             self.nodes_list, self.links_list = self.load_graph_st(st)
 
-    def _data_for_bellman_ford(self, start):
-        destination_dict = {} # Stands for destination
-        pre_dict = {} # Stands for predecessor
-        graph = self.nodes_to_dict()
-
-        for node in graph:
-            destination_dict[node] = float('Inf') # set inf distances to other node except start node
-            pre_dict[node] = None
-        destination_dict[start] = 0 # first node distance is zero couse it start
-        return destination_dict, pre_dict, graph
-
     def relax(self, node_id, neigh_id, graph, d, p, path_list):
         '''
             if distance between node_id and neigh_id lower than we have
@@ -41,6 +30,9 @@ class Graph:
         return d, p, path_list
 
     def bf_path(self, start, end=None) -> Path:
+        '''
+            finding path from start to end using bfs
+        '''
         d, p = self.bellman_ford(start);
         if end is not None:
             graph = self.nodes_to_dict()
@@ -57,7 +49,9 @@ class Graph:
 
     def bellman_ford(self, start):
         '''
-            find a shortest path from start_node to other node in graph
+            find a shortest path from start_node to all other node in graph
+
+            if paths have negative cycle print it
         '''
         d, p, graph = self._data_for_bellman_ford(start)
         path_list = dict((i, []) for i in graph.keys())
@@ -71,13 +65,15 @@ class Graph:
             for v in graph[u]:
                 node_weight = graph[u][v] if graph[u][v] is not None else 0
                 if d[v] <= d[u] + node_weight:
-                    pass
                     #raise Exception("negative")
-                    #print('negative')
+                    print('negative')
 
         return d, p
 
     def find_all_paths(self, start, end, path = []) -> list:
+        '''
+            returning all available path from start to end
+        '''
         graph = self.nodes_to_dict()
         path = path + [start]
         if start == end:
@@ -279,6 +275,9 @@ class Graph:
         return g
 
     def dejkstra_path(self, start, end = None) -> Path:
+        '''
+            init method for dejkstra algorithm
+        '''
         opened_node = {} #p #словарь {открытая вершина : её метка}
         short_path = {} #b #словарь для отслеживания короткого пути
         visited_nodes = [] #t #список посещённых вершин
@@ -358,9 +357,20 @@ class Graph:
 
 
     def create_path(self, path) -> Path:
+        '''
+            returning Path object with given path-links
+        '''
         return Path(self, path)
 
     def update_node(self, temp_storage, node_id, link_to, weight) -> Node:
+        '''
+            if you need to set/update info about node
+            use this method
+
+            >> g.update_node(t, 1, 2, 3)
+
+            returning Node with given node_id
+        '''
         node = temp_storage['nodes'].get(node_id)
         to_node = temp_storage['nodes'].get(link_to)
         if to_node is None:
@@ -376,13 +386,11 @@ class Graph:
         temp_storage['nodes'].update({node_id: node})
         return node
 
-    def _node_count(self, temp_st, st):
-        for i in st:
-            temp_st['nodes'].update({int(i[0]): Node(i[0], self)})
-
-        return temp_st
-
     def check_hamilton_cycle(self, pt, path=[]):
+        '''
+            checking ALL graph for hamilton cycle
+            return node_id and path where we have this cycle
+        '''
         G = self.nodes_for_dbfs()
         size = len(G)
         if pt not in set(path):
@@ -402,6 +410,21 @@ class Graph:
         return None
 
     def load_graph_st(self, st) -> dict:
+        '''
+            loading graph from matrix like this ->
+            [
+                [1, 2, -2],
+                [1, 3, 4],
+                [3, 2, 3],
+                [3, 4, 1],
+                [4, 3, 2],
+                [5, 5, None]
+            ]
+
+            first is node_id
+            second is to_node_id
+            third is link weight(None if dont need to calculate this weight)
+        '''
         t = {'nodes':{}, 'links':[]}
         t = self._node_count(t, st)
         print(t)
@@ -412,6 +435,9 @@ class Graph:
         return t['nodes'], t['links']
 
     def load_graph_file(self) -> dict:
+        '''
+            load graph from file setted in self.file
+        '''
         t = {'nodes':{}, 'links':[]}
         l = []
         for line in open(self.file, 'r', encoding = 'utf8').readlines():
@@ -425,23 +451,52 @@ class Graph:
         return t['nodes'], t['links']
 
     def nodes_id_to_links(self, path) -> list:
+        '''
+            creating list of links from node_id list
+
+            >> g.nodes_id_to_links([1, 2, 3])
+            return [Link: From id 1 to id 2, Link: From id 2 to id 3]
+        '''
         return [self.get_link(path[i], path[i+1]) for i in range(0, len(path), 1) if i<len(path)-1]
 
     def get_link(self, from_id, to_id) -> Link:
+        '''
+            returning link with from_id to to_id
+        '''
         for link in self.links_list:
             if link.from_id == from_id and link.to_id == to_id:
                 return link
 
     def get_links(self) -> list:
+        '''
+            list of all links in this graph
+        '''
         return self.links_list
 
     def get_nodes(self) -> list:
+        '''
+            sorted list of nodes by ID ascending
+
+            returning [Node: ID 1, Node: ID 2]
+        '''
         return sorted(self.nodes_list.values(), key = getKeyID)
 
     def get_all_nodes(self) -> dict:
+        '''
+            returning list of nodes but without sort
+        '''
         return self.nodes_list
 
     def matrix_incidence(self) -> np.matrix:
+        '''
+            incidency matrix
+
+            1 : [-1. -1.  0.  0.  0.  0.]
+            2 : [1. 0. 1. 0. 0. 0.]
+            3 : [ 0.  1. -1. -1.  1.  0.]
+            4 : [ 0.  0.  0.  1. -1.  0.]
+            5 : [0. 0. 0. 0. 0. 1.]
+        '''
         matrix = np.zeros(shape = (len(self.nodes_list), len(self.links_list)))
 
         for n, i in enumerate(self.links_list):
@@ -451,6 +506,15 @@ class Graph:
         return matrix
 
     def matrix_adjacency(self) -> np.matrix:
+        '''
+            adjacency matrix
+
+            1 : [0. 1. 1. 0. 0.]
+            2 : [0. 0. 0. 0. 0.]
+            3 : [0. 1. 0. 1. 0.]
+            4 : [0. 0. 1. 0. 0.]
+            5 : [0. 0. 0. 0. 1.]
+        '''
         matrix = np.zeros(shape = (len(self.nodes_list), len(self.nodes_list)))
 
         for node in self.nodes_list.values():
@@ -460,6 +524,15 @@ class Graph:
         return matrix
 
     def get_nodes_power(self) -> dict:
+        '''
+            dict nodes with him power
+
+            {1: 2, 2: 2, 3: 4, 4: 2, 5: 2}
+            node with id 1 - power 2
+            node with id 2 - power 3
+            node with id 5 - power 2
+            etc.
+        '''
         l = {}
         for node in self.get_nodes():
             for link in node.get_linked_to():
@@ -469,6 +542,9 @@ class Graph:
         return l
 
     def get_isolated(self) -> list:
+        '''
+            list of isolated nodes
+        '''
         nodes = self.get_nodes()
         l = dict((num, 0) for num in range(1, len(nodes)+1, 1))
         for node in nodes:
@@ -479,6 +555,9 @@ class Graph:
         return [i for i in l.keys() if l[i]==0]
 
     def show(self, path = None, save_file = None, show = True):
+        '''
+            showing current graph or Path object
+        '''
         G=nx.MultiDiGraph()
         fig, ax = plt.subplots()
         nodes = self.get_nodes()
@@ -508,6 +587,23 @@ class Graph:
             plt.savefig(save_file, dpi=200)
         if show:
             plt.show()
+
+    def _node_count(self, temp_st, st):
+        for i in st:
+            temp_st['nodes'].update({int(i[0]): Node(i[0], self)})
+
+        return temp_st
+
+    def _data_for_bellman_ford(self, start):
+        destination_dict = {} # Stands for destination
+        pre_dict = {} # Stands for predecessor
+        graph = self.nodes_to_dict()
+
+        for node in graph:
+            destination_dict[node] = float('Inf') # set inf distances to other node except start node
+            pre_dict[node] = None
+        destination_dict[start] = 0 # first node distance is zero couse it start
+        return destination_dict, pre_dict, graph
 
     def __str__(self):
         representation = "Graph: \n"
