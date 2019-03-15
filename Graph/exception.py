@@ -1,3 +1,6 @@
+from . import register_plugin
+
+@register_plugin
 class CantReach(Exception):
     '''
         Raises when cant find path

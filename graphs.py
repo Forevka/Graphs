@@ -1,5 +1,5 @@
-from Graph import Graph
-from exception import CantReach
+from Graph.Graph import Graph
+from Graph.exception import CantReach
 
 graph = [
     [1, 2, -2],
@@ -29,7 +29,7 @@ print("Без циклів" if hamilton is None else ("Цикл з вершин�
 
 print("Степені точок: ", g.get_nodes_power())
 print("Ізольовані точки: ", g.get_isolated())
-dejkstra_path = g.dejkstra_path(1)
+dejkstra_path = g.dejkstra_path(1, end = 2)
 
 bellman_ford_path = g.bf_path(1)
 topological_sorted_list = g.topological_sort()
@@ -51,5 +51,5 @@ print("Всі вершини знайдені через BFS:", bfs_n)
 
 print("Всі можливі шляхи знайдені через DFS:\n", '\n'.join([str(i) for i in dfs_p]))
 print("Всі вершини знайдені через DFS:", dfs_n)
-g.show()
-#dejkstra_path.show('123.png')
+#g.show()
+dejkstra_path.show()

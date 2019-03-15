@@ -1,3 +1,6 @@
+from . import register_plugin
+
+@register_plugin
 class Path:
     def __init__(self, father, path_list):
         self.father = father
@@ -31,6 +34,7 @@ class Path:
     def __str__(self):
         return "Path: {}".format(self.path)
 
+@register_plugin
 class Link:
     def __init__(self, from_id, to_id, weight, father):
         self.from_id = int(from_id)
@@ -55,6 +59,7 @@ class Link:
     def __str__(self):
         return "Link: from {} to {} weight {}".format(self.from_id, self.to_id, self.weight)
 
+@register_plugin
 class Node:
     def __init__(self, id, father):
         self.id = int(id)

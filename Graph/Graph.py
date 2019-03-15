@@ -1,10 +1,12 @@
 import numpy as np
 import networkx as nx
 import matplotlib.pyplot as plt
-from Node_Link_Path import Node, Link, Path
-from misc import draw_network, get_literal, getKeyWeight, getKeyID
-from exception import CantReach
+from . import draw_network, get_literal, getKeyWeight, getKeyID
+from . import CantReach
+from . import register_plugin
+from . import Node, Link, Path
 
+@register_plugin
 class Graph:
     def __init__(self, file = 'first.txt', st = None):
         self.file = file

@@ -1,12 +1,17 @@
 from matplotlib.patches import FancyArrowPatch, Circle
 import networkx as nx
+from . import register_plugin
 
+
+@register_plugin
 def get_literal(num):
     return chr(64+num)
 
+@register_plugin
 def getKeyID(custom):
     return custom.id
 
+@register_plugin
 def getKeyWeight(custom):
     return custom.weight
 
@@ -24,7 +29,8 @@ def update_annot(ind):
     annot.set_text(text)
     annot.get_bbox_patch().set_facecolor(cmap(norm(c[ind["ind"][0]])))
     annot.get_bbox_patch().set_alpha(0.4)
-
+    
+@register_plugin
 def draw_network(G, pos, ax, links, sg=None, path_links = None):
     for n in G:
         c=Circle(pos[n],radius=0.05,alpha=0.5)
